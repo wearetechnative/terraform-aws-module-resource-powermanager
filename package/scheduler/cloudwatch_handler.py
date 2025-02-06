@@ -46,6 +46,31 @@ class CloudWatchAlarmScheduler:
             except ClientError as exc:
                 cloudwatch_exception("cloudwatch alarm", alarm_name, exc)
 
+    def hibernate(self, aws_tags: List[Dict]) -> None:
+        """Aws Cloudwatch alarm disable function.
+
+        Disable Cloudwatch alarm with defined tags.
+
+        :param list[map] aws_tags:
+            Aws tags to use for filter resources.
+            For example:
+            [
+                {
+                    'Key': 'string',
+                    'Values': [
+                        'string',
+                    ]
+                }
+            ]
+        """
+        for alarm_arn in self.tag_api.get_resources("cloudwatch:alarm", aws_tags):
+            alarm_name = alarm_arn.split(":")[-1]
+            try:
+                self.cloudwatch.disable_alarm_actions(AlarmNames=[alarm_name])
+                print(f"Disable Cloudwatch alarm {alarm_name}")
+            except ClientError as exc:
+                cloudwatch_exception("cloudwatch alarm", alarm_name, exc)
+
     def start(self, aws_tags: List[Dict]) -> None:
         """Aws Cloudwatch alarm enable function.
 
