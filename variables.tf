@@ -9,6 +9,12 @@ variable "cloudwatch_schedule_expression" {
   default     = "cron(0 22 ? * MON-FRI *)"
 }
 
+variable "cloudwatch_schedule_expression_timezone" {
+  description = "value"
+  type        = string
+  default     = "Europe/Amsterdam"
+}
+
 variable "name" {
   description = "Define name to use for lambda function, cloudwatch event and iam role"
   type        = string
