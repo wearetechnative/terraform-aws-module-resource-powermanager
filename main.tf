@@ -20,7 +20,10 @@ data "aws_iam_policy_document" "this" {
 
     principals {
       type        = "Service"
-      identifiers = ["lambda.amazonaws.com"]
+      identifiers = [
+        "lambda.amazonaws.com",
+        "scheduler.amazonaws.com"
+      ]
     }
   }
 }
@@ -44,6 +47,7 @@ data "aws_iam_policy_document" "autoscaling_group_scheduler" {
       "autoscaling:DescribeAutoScalingInstances",
       "autoscaling:TerminateInstanceInAutoScalingGroup",
       "ec2:TerminateInstances",
+      "lambda:InvokeFunction",
     ]
 
     resources = [
@@ -290,28 +294,33 @@ resource "aws_lambda_function" "this" {
 
 ################################################
 #
-#            CLOUDWATCH EVENT
+#            CLOUDWATCH SCHEDULER
 #
 ################################################
 
-resource "aws_cloudwatch_event_rule" "this" {
-  name                = "trigger-lambda-scheduler-${var.name}"
-  description         = "Trigger lambda scheduler"
-  schedule_expression = var.cloudwatch_schedule_expression
-  tags                = var.tags
-}
 
-resource "aws_cloudwatch_event_target" "this" {
-  arn  = aws_lambda_function.this.arn
-  rule = aws_cloudwatch_event_rule.this.name
+resource "aws_scheduler_schedule" "this" {
+  name                         = "trigger-lambda-scheduler-${var.name}"
+  description                  = "Trigger lambda scheduler"
+  schedule_expression_timezone = var.cloudwatch_schedule_expression_timezone
+  schedule_expression          = var.cloudwatch_schedule_expression
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  target {
+    arn        = aws_lambda_function.this.arn
+    role_arn   = aws_iam_role.this[0].arn
+  }
 }
 
 resource "aws_lambda_permission" "this" {
   statement_id  = "AllowExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
-  principal     = "events.amazonaws.com"
+  principal     = "scheduler.amazonaws.com"
   function_name = aws_lambda_function.this.function_name
-  source_arn    = aws_cloudwatch_event_rule.this.arn
+  source_arn    = aws_scheduler_schedule.this.arn
 }
 
 ################################################
