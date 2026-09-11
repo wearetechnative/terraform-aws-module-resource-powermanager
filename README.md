@@ -1,3 +1,5 @@
+# Terraform AWS Resource Powermanager ![](https://img.shields.io/github/actions/workflow/status/wearetechnative/terraform-aws-module-resource-powermanager/tflint.yaml?branch=main&style=plastic)
+
 <!-- BEGIN_TF_DOCS -->
 ## Providers
 
